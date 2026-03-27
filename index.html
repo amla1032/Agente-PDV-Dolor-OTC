@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agente PDV · Dolor OTC</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #1a1d24;
+    --border: #252830;
+    --accent: #e8ff47;
+    --accent2: #47b8ff;
+    --danger: #ff4747;
+    --text: #eef0f5;
+    --muted: #6b7280;
+    --success: #47ffb0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(232,255,71,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 10% 80%, rgba(71,184,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-block h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  .logo-block h1 span {
+    color: var(--accent);
+  }
+
+  .logo-block p {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 11px;
+    color: var(--accent);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    background: var(--accent);
+    color: #0a0c10;
+  }
+
+  .tab:hover:not(.active) {
+    color: var(--text);
+    background: var(--surface2);
+  }
+
+  /* Panel */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Section label */
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* Canal selector */
+  .canal-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .canal-btn {
+    padding: 10px 6px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.3px;
+  }
+
+  .canal-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .canal-btn.selected { border-color: var(--accent); background: rgba(232,255,71,0.08); color: var(--accent); }
+
+  /* Input area */
+  .input-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .input-block:focus-within { border-color: rgba(232,255,71,0.4); }
+
+  .input-block textarea {
+    width: 100%;
+    min-height: 120px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 16px 18px;
+    resize: vertical;
+  }
+
+  .input-block textarea::placeholder { color: var(--muted); }
+
+  /* Image upload */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+    background: var(--surface);
+  }
+
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent2);
+    background: rgba(71,184,255,0.04);
+  }
+
+  .upload-zone input { display: none; }
+
+  .upload-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .upload-zone p {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .upload-zone strong {
+    color: var(--accent2);
+  }
+
+  /* Preview images */
+  .images-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .img-thumb {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .img-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .img-thumb .remove-img {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    color: white;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Enfoque selector */
+  .enfoque-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .enfoque-btn {
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .enfoque-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .enfoque-btn.selected { border-color: var(--accent2); background: rgba(71,184,255,0.1); color: var(--accent2); }
+
+  /* CTA button */
+  .btn-analyze {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #0a0c10;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-analyze:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(232,255,71,0.2); }
+  .btn-analyze:active { transform: translateY(0); }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Loading */
+  .loading-state {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .loading-state.visible { display: block; }
+
+  .spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-state p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* Results */
+  .results {
+    display: none;
+    margin-top: 8px;
+  }
+
+  .results.visible { display: block; }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .btn-reset {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-reset:hover { border-color: var(--text); color: var(--text); }
+
+  /* Result sections */
+  .result-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 12px;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-section:nth-child(1) { animation-delay: 0.05s; }
+  .result-section:nth-child(2) { animation-delay: 0.10s; }
+  .result-section:nth-child(3) { animation-delay: 0.15s; }
+  .result-section:nth-child(4) { animation-delay: 0.20s; }
+  .result-section:nth-child(5) { animation-delay: 0.25s; }
+  .result-section:nth-child(6) { animation-delay: 0.30s; }
+  .result-section:nth-child(7) { animation-delay: 0.35s; }
+
+  .result-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-yellow { background: var(--accent); }
+  .dot-blue { background: var(--accent2); }
+  .dot-red { background: var(--danger); }
+  .dot-green { background: var(--success); }
+  .dot-white { background: var(--text); }
+
+  .result-section-content {
+    color: #c8ccd6;
+    font-size: 14px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+  }
+
+  /* Executive summary special */
+  .exec-summary {
+    background: rgba(232,255,71,0.06);
+    border-color: rgba(232,255,71,0.2);
+  }
+
+  .exec-summary .result-section-content {
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  /* Priority tags */
+  .priority-high { color: var(--danger); font-weight: 600; }
+  .priority-med { color: var(--accent); font-weight: 600; }
+  .priority-low { color: var(--success); font-weight: 600; }
+
+  /* Historial tab */
+  .history-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .history-empty .icon { font-size: 36px; margin-bottom: 12px; }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.18s;
+  }
+
+  .history-item:hover { border-color: var(--accent2); }
+
+  .history-item .hi-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .history-item .hi-canal {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .history-item .hi-date {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .history-item .hi-preview {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .canal-grid { grid-template-columns: repeat(3, 1fr); }
+    .tabs { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo-block">
+      <h1>Agente PDV · <span>Dolor OTC</span></h1>
+      <p>Diagnóstico de Ejecución en Punto de Venta · LATAM</p>
+    </div>
+    <div class="badge">IA Activa</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('diagnostico')">🔍 Diagnóstico</button>
+    <button class="tab" onclick="switchTab('comparativo')">⚔️ Vs Competencia</button>
+    <button class="tab" onclick="switchTab('prepvisita')">📋 Prep. Visita</button>
+    <button class="tab" onclick="switchTab('historial')">🕐 Historial</button>
+  </div>
+
+  <!-- DIAGNÓSTICO -->
+  <div id="panel-diagnostico" class="panel active">
+    <div class="section-label">Canal</div>
+    <div class="canal-grid">
+      <div class="canal-btn" onclick="selectCanal(this, 'Farmacia de Cadena')">Farmacia<br>Cadena</div>
+      <div class="canal-btn" onclick="selectCanal(this, 'Farmacia Independiente')">Farmacia<br>Indep.</div>
+      <div class="canal-btn" onclick="selectCanal(this, 'Supermercado / Autoservicio')">Super /<br>Auto</div>
+      <div class="canal-btn" onclick="selectCanal(this, 'Club de Precio')">Club de<br>Precio</div>
+      <div class="canal-btn" onclick="selectCanal(this, 'Canal Tradicional')">Canal<br>Tradicional</div>
+    </div>
+
+    <div class="section-label" style="margin-top:4px;">Enfoque del análisis</div>
+    <div class="enfoque-grid">
+      <button class="enfoque-btn selected" onclick="selectEnfoque(this, 'Shopper')">👤 Shopper</button>
+      <button class="enfoque-btn" onclick="selectEnfoque(this, 'Trade')">🤝 Trade</button>
+      <button class="enfoque-btn" onclick="selectEnfoque(this, 'Category')">📊 Category</button>
+      <button class="enfoque-btn" onclick="selectEnfoque(this, 'Comercial')">💼 Comercial</button>
+      <button class="enfoque-btn" onclick="selectEnfoque(this, 'Cliente/Cuenta')">🏪 Cliente/Cuenta</button>
+    </div>
+
+    <div class="section-label">Fotos de anaquel / exhibición</div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+         ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+      <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(event)">
+      <div class="upload-icon">📸</div>
+      <p><strong>Sube fotos</strong> o arrastra aquí</p>
+      <p style="margin-top:4px;font-size:12px;">JPG, PNG, WEBP — hasta 5 imágenes</p>
+    </div>
+    <div class="images-preview" id="imagesPreview"></div>
+
+    <div class="section-label">Observaciones de campo</div>
+    <div class="input-block">
+      <textarea id="observaciones" placeholder="Ej: Visita Farmacia Benavides, CDMX. Marca propia tiene 8 frentes, nosotros 3. Sin precio visible. Competidor con stopper. Portafolio incompleto: falta SKU 400mg. Sin material POP. Ubicados en estante inferior derecho..."></textarea>
+    </div>
+
+    <button class="btn-analyze" id="btnAnalyze" onclick="runDiagnostico()">
+      <span>🔍</span> Analizar ejecución
+    </button>
+
+    <div class="loading-state" id="loadingDiag">
+      <div class="spinner"></div>
+      <p>Analizando hallazgos de campo...</p>
+    </div>
+
+    <div class="results" id="resultsDiag"></div>
+  </div>
+
+  <!-- VS COMPETENCIA -->
+  <div id="panel-comparativo" class="panel">
+    <div class="section-label">Canal</div>
+    <div class="canal-grid">
+      <div class="canal-btn" onclick="selectCanal(this, 'Farmacia de Cadena', 'comp')">Farmacia<br>Cadena</div>
+      <div class="canal-btn" onclick="selectCanal(this, 'Farmacia Independiente', 'comp')">Farmacia<br>Indep.</div>
+      <div class="canal-btn" onclick="selectCanal(this, 'Supermercado / Autoservicio', 'comp')">Super /<br>Auto</div>
+      <div class="canal-btn" onclick="selectCanal(this, 'Club de Precio', 'comp')">Club de<br>Precio</div>
+      <div class="canal-btn" onclick="selectCanal(this, 'Canal Tradicional', 'comp')">Canal<br>Trad.</div>
+    </div>
+
+    <div class="section-label">Tu marca / ejecución propia</div>
+    <div class="input-block">
+      <textarea id="compPropia" placeholder="Describe la ejecución de tu marca: frentes, ubicación, POP, precio, portafolio presente, promociones..."></textarea>
+    </div>
+
+    <div class="section-label">Competidores observados</div>
+    <div class="input-block">
+      <textarea id="compComp" placeholder="Describe qué hace la competencia: marca líder, seguidores, frentes, materiales, precios, promociones, innovaciones que observaste..."></textarea>
+    </div>
+
+    <div class="section-label">Fotos (opcional)</div>
+    <div class="upload-zone" onclick="document.getElementById('fileInputComp').click()"
+         ondragover="handleDragOver(event)" ondrop="handleDropComp(event)" ondragleave="handleDragLeave(event)">
+      <input type="file" id="fileInputComp" multiple accept="image/*" onchange="handleFilesComp(event)">
+      <div class="upload-icon">📸</div>
+      <p><strong>Fotos comparativas</strong> — tu marca vs competidor</p>
+    </div>
+    <div class="images-preview" id="imagesPreviewComp"></div>
+
+    <button class="btn-analyze" onclick="runComparativo()">⚔️ Analizar vs competencia</button>
+
+    <div class="loading-state" id="loadingComp"></div>
+    <div class="results" id="resultsComp"></div>
+  </div>
+
+  <!-- PREP VISITA -->
+  <div id="panel-prepvisita" class="panel">
+    <div class="section-label">¿A dónde vas?</div>
+    <div class="input-block">
+      <textarea id="prepDestino" style="min-height:80px" placeholder="Ej: Visita a Farmacias del Ahorro, Guadalajara. Reunión con el comprador de la categoría Dolor. Quiero revisar ejecución y presentar propuesta de mejora de anaquel..."></textarea>
+    </div>
+
+    <div class="section-label">Contexto adicional (opcional)</div>
+    <div class="input-block">
+      <textarea id="prepContexto" style="min-height:80px" placeholder="Situación actual: últimas visitas, acuerdos vigentes, problemas recurrentes, objetivos del trimestre, competidores que están ganando espacio..."></textarea>
+    </div>
+
+    <button class="btn-analyze" onclick="runPrepVisita()">📋 Preparar visita</button>
+
+    <div class="loading-state" id="loadingPrep"></div>
+    <div class="results" id="resultsPrep"></div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div id="panel-historial" class="panel">
+    <div id="historialContent">
+      <div class="history-empty">
+        <div class="icon">🗂️</div>
+        <p>Aún no hay análisis guardados.<br>Corre tu primer diagnóstico.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// State
+let selectedCanal = '';
+let selectedCanalComp = '';
+let selectedEnfoque = 'Shopper';
+let uploadedImages = [];
+let uploadedImagesComp = [];
+let historial = [];
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const tabs = ['diagnostico','comparativo','prepvisita','historial'];
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// Canal
+function selectCanal(el, canal, ctx) {
+  const parent = el.closest('.canal-grid');
+  parent.querySelectorAll('.canal-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  if (ctx === 'comp') selectedCanalComp = canal;
+  else selectedCanal = canal;
+}
+
+// Enfoque
+function selectEnfoque(el, enfoque) {
+  document.querySelectorAll('.enfoque-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedEnfoque = enfoque;
+}
+
+// Drag/drop
+function handleDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('dragover');
+}
+function handleDragLeave(e) {
+  e.currentTarget.classList.remove('dragover');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  processFiles([...e.dataTransfer.files], 'main');
+}
+function handleDropComp(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  processFiles([...e.dataTransfer.files], 'comp');
+}
+function handleFiles(e) { processFiles([...e.target.files], 'main'); }
+function handleFilesComp(e) { processFiles([...e.target.files], 'comp'); }
+
+function processFiles(files, ctx) {
+  const maxFiles = 5;
+  const arr = ctx === 'comp' ? uploadedImagesComp : uploadedImages;
+  const previewId = ctx === 'comp' ? 'imagesPreviewComp' : 'imagesPreview';
+
+  files.slice(0, maxFiles - arr.length).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      arr.push({ dataUrl: e.target.result, name: file.name, type: file.type });
+      renderPreviews(previewId, arr, ctx);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviews(previewId, arr, ctx) {
+  const container = document.getElementById(previewId);
+  container.innerHTML = '';
+  arr.forEach((img, i) => {
+    const div = document.createElement('div');
+    div.className = 'img-thumb';
+    div.innerHTML = `<img src="${img.dataUrl}" alt="foto">
+      <button class="remove-img" onclick="removeImg(${i}, '${ctx}')">✕</button>`;
+    container.appendChild(div);
+  });
+}
+
+function removeImg(i, ctx) {
+  if (ctx === 'comp') {
+    uploadedImagesComp.splice(i, 1);
+    renderPreviews('imagesPreviewComp', uploadedImagesComp, 'comp');
+  } else {
+    uploadedImages.splice(i, 1);
+    renderPreviews('imagesPreview', uploadedImages, 'main');
+  }
+}
+
+// Convert images to base64 for API
+function getBase64(dataUrl) {
+  return dataUrl.split(',')[1];
+}
+
+// Build messages with images
+function buildMessages(systemPrompt, userText, images) {
+  const content = [];
+
+  images.forEach((img, i) => {
+    content.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: img.type,
+        data: getBase64(img.dataUrl)
+      }
+    });
+    content.push({ type: 'text', text: `[Foto ${i+1}: ${img.name}]` });
+  });
+
+  content.push({ type: 'text', text: userText });
+
+  return [{ role: 'user', content }];
+}
+
+// Render results
+function renderResults(containerId, sections) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  container.classList.add('visible');
+
+  const header = document.createElement('div');
+  header.className = 'result-header';
+  header.innerHTML = `<h2>Diagnóstico PDV</h2>
+    <button class="btn-reset" onclick="resetResults('${containerId}')">Nueva consulta</button>`;
+  container.appendChild(header);
+
+  const colors = ['dot-yellow','dot-blue','dot-red','dot-green','dot-white','dot-yellow','dot-blue'];
+  const extra = containerId.includes('Diag') || containerId === 'resultsDiag' ? 'exec-summary' : '';
+
+  sections.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = `result-section${i === sections.length-1 ? ' exec-summary' : ''}`;
+    div.innerHTML = `
+      <div class="result-section-title">
+        <span class="section-dot ${colors[i % colors.length]}"></span>
+        ${s.title}
+      </div>
+      <div class="result-section-content">${s.content}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function resetResults(containerId) {
+  const container = document.getElementById(containerId);
+  container.classList.remove('visible');
+  container.innerHTML = '';
+}
+
+function parseResponse(text) {
+  // Parse lettered sections A-G
+  const sectionTitles = {
+    'A': '🔍 A. Diagnóstico General',
+    'B': '📌 B. Hallazgos Clave',
+    'C': '💡 C. Oportunidades Detectadas',
+    'D': '⚠️ D. Riesgos / Brechas de Ejecución',
+    'E': '✅ E. Acciones Recomendadas',
+    'F': '🎯 F. Prioridad',
+    'G': '📣 G. Resumen Ejecutivo'
+  };
+
+  const sections = [];
+  const letters = ['A','B','C','D','E','F','G'];
+
+  letters.forEach((letter, i) => {
+    const nextLetter = letters[i+1];
+    let pattern;
+    if (nextLetter) {
+      pattern = new RegExp(`[${letter}][\\.\\.:\\s]+([\\s\\S]*?)(?=[${nextLetter}][\\.\\:\\s])`, 'i');
+    } else {
+      pattern = new RegExp(`[${letter}][\\.\\.:\\s]+([\\s\\S]*)$`, 'i');
+    }
+    const match = text.match(pattern);
+    if (match) {
+      sections.push({ title: sectionTitles[letter], content: match[1].trim() });
+    }
+  });
+
+  if (sections.length === 0) {
+    sections.push({ title: '📊 Análisis Completo', content: text });
+  }
+
+  return sections;
+}
+
+// Main diagnosis
+async function runDiagnostico() {
+  const obs = document.getElementById('observaciones').value.trim();
+  if (!obs && uploadedImages.length === 0) {
+    alert('Por favor ingresa observaciones de campo o sube al menos una foto.');
+    return;
+  }
+
+  const btn = document.getElementById('btnAnalyze');
+  const loading = document.getElementById('loadingDiag');
+  const results = document.getElementById('resultsDiag');
+
+  btn.disabled = true;
+  loading.classList.add('visible');
+  results.classList.remove('visible');
+
+  const systemPrompt = `Quiero que actúes como un agente experto en ejecución en punto de venta para la categoría de Dolor OTC en LATAM.
+
+Nombre del agente: Agente de Diagnóstico de Ejecución en Punto de Venta para Dolor OTC
+
+Rol: Eres un consultor senior experto en trade marketing, shopper marketing, execution excellence, category management y ventas para marcas OTC en la categoría de Dolor en Latinoamérica. Tienes experiencia en farmacias de cadena, farmacias independientes, autoservicios, clubes y canal tradicional. Tu enfoque no es teórico: debes analizar hallazgos reales de campo y convertirlos en diagnósticos claros, oportunidades accionables y planes concretos de mejora.
+
+Objetivo principal: Ayudar a interpretar lo que se observa en punto de venta para detectar problemas de ejecución, identificar oportunidades comerciales y recomendar acciones concretas que ayuden a mejorar visibilidad, conversión y venta en la categoría de Dolor OTC.
+
+Canal analizado: ${selectedCanal || 'No especificado'}
+Enfoque del análisis: ${selectedEnfoque}
+
+Variables que siempre debes revisar:
+- Presencia o ausencia de la marca
+- Número de frentes
+- Altura y ubicación en anaquel
+- Bloque de marca
+- Orden y navegación del anaquel
+- Comparación vs líder y principales competidores
+- Precio y precio relativo
+- Promociones visibles
+- Material POP
+- Exhibiciones secundarias
+- Disponibilidad / agotados
+- Portafolio presente
+- Claridad del mensaje al shopper
+- Oportunidades de mejora inmediatas
+
+FORMATO DE RESPUESTA OBLIGATORIO — usa exactamente estas 7 secciones con estas letras:
+
+A. Diagnóstico General
+[Diagnóstico claro de la situación de ejecución observada]
+
+B. Hallazgos Clave
+[Lista de hallazgos concretos: qué está bien y qué está mal, con impacto explicado]
+
+C. Oportunidades Detectadas
+[Oportunidades ordenadas por impacto esperado, adaptadas al canal y contexto]
+
+D. Riesgos / Brechas de Ejecución
+[Riesgos comerciales concretos si no se actúa]
+
+E. Acciones Recomendadas
+[Acciones concretas y realistas, no genéricas — adaptadas al canal]
+
+F. Prioridad
+[Clasifica cada acción como Alta, Media o Baja. Identifica Quick Wins]
+
+G. Resumen Ejecutivo
+[5 líneas máximo, listo para compartir con equipo o cliente]
+
+Regla importante: Siempre convierte observación en acción. Siempre conecta hallazgo con implicación comercial. Siempre termina con recomendación. Sé concreto, ejecutivo y accionable.`;
+
+  const userText = `Por favor analiza esta visita a punto de venta:
+
+Canal: ${selectedCanal || 'No especificado'}
+Enfoque: ${selectedEnfoque}
+${uploadedImages.length > 0 ? `\nSe adjuntan ${uploadedImages.length} foto(s) del punto de venta.` : ''}
+
+Observaciones de campo:
+${obs || '(Ver fotos adjuntas)'}`;
+
+  try {
+    const messages = buildMessages(systemPrompt, userText, uploadedImages);
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1800,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: messages[0].content }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content.map(b => b.text || '').join('\n');
+
+    const sections = parseResponse(text);
+    renderResults('resultsDiag', sections);
+
+    // Save to history
+    historial.unshift({
+      canal: selectedCanal || 'No especificado',
+      enfoque: selectedEnfoque,
+      obs: obs.substring(0, 120),
+      date: new Date().toLocaleString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }),
+      sections
+    });
+    renderHistorial();
+
+  } catch (err) {
+    document.getElementById('resultsDiag').innerHTML = `<div class="result-section" style="border-color:var(--danger)">
+      <div class="result-section-title"><span class="section-dot dot-red"></span>Error de conexión</div>
+      <div class="result-section-content">No se pudo conectar con el agente. Verifica tu conexión e intenta nuevamente.\n\nDetalle: ${err.message}</div>
+    </div>`;
+    document.getElementById('resultsDiag').classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    loading.classList.remove('visible');
+  }
+}
+
+// Comparativo
+async function runComparativo() {
+  const propia = document.getElementById('compPropia').value.trim();
+  const comp = document.getElementById('compComp').value.trim();
+  if (!propia && !comp) {
+    alert('Ingresa información de al menos una ejecución para comparar.');
+    return;
+  }
+
+  const loading = document.getElementById('loadingComp');
+  const results = document.getElementById('resultsComp');
+  loading.innerHTML = '<div class="spinner"></div><p>Analizando diferencias vs competencia...</p>';
+  loading.classList.add('visible');
+  results.classList.remove('visible');
+
+  const systemPrompt = `Eres un consultor senior experto en trade marketing y ejecución en punto de venta para la categoría de Dolor OTC en LATAM. Analiza el comparativo de ejecución entre la marca propia y la competencia con enfoque en: visibilidad, share of shelf, materiales POP, precio, portafolio y conversión. Sé concreto y accionable.
+
+Canal: ${selectedCanalComp || 'No especificado'}
+
+FORMATO OBLIGATORIO — usa estas 7 secciones:
+A. Diagnóstico General
+B. Hallazgos Clave
+C. Oportunidades Detectadas
+D. Riesgos / Brechas de Ejecución
+E. Acciones Recomendadas
+F. Prioridad
+G. Resumen Ejecutivo`;
+
+  const userText = `Comparativo de ejecución en PDV — Canal: ${selectedCanalComp || 'No especificado'}
+
+NUESTRA EJECUCIÓN:
+${propia || '(Ver fotos)'}
+
+COMPETENCIA OBSERVADA:
+${comp || 'No especificada'}`;
+
+  try {
+    const messages = buildMessages(systemPrompt, userText, uploadedImagesComp);
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1800,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: messages[0].content }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content.map(b => b.text || '').join('\n');
+    renderResults('resultsComp', parseResponse(text));
+  } catch (err) {
+    results.innerHTML = `<div class="result-section" style="border-color:var(--danger)"><div class="result-section-content">Error: ${err.message}</div></div>`;
+    results.classList.add('visible');
+  } finally {
+    loading.classList.remove('visible');
+  }
+}
+
+// Prep visita
+async function runPrepVisita() {
+  const destino = document.getElementById('prepDestino').value.trim();
+  if (!destino) { alert('Describe a dónde vas o a qué reunión.'); return; }
+
+  const loading = document.getElementById('loadingPrep');
+  const results = document.getElementById('resultsPrep');
+  loading.innerHTML = '<div class="spinner"></div><p>Preparando visita...</p>';
+  loading.classList.add('visible');
+  results.classList.remove('visible');
+
+  const contexto = document.getElementById('prepContexto').value.trim();
+
+  const systemPrompt = `Eres un consultor senior experto en trade marketing para la categoría de Dolor OTC en LATAM. Prepara al usuario para una visita a punto de venta o reunión con cliente. Tu output debe ser práctico y ejecutivo: qué observar, qué preguntar, qué argumentos llevar, qué riesgos anticipar.
+
+FORMATO OBLIGATORIO — usa estas 7 secciones:
+A. Diagnóstico General (contexto de la visita)
+B. Hallazgos Clave (qué saber antes de ir)
+C. Oportunidades Detectadas (qué buscar en campo)
+D. Riesgos / Brechas de Ejecución (qué puede fallar)
+E. Acciones Recomendadas (checklist de visita)
+F. Prioridad
+G. Resumen Ejecutivo (mensaje de entrada para la visita)`;
+
+  const userText = `Ayúdame a prepararme para esta visita:
+
+${destino}
+
+${contexto ? `Contexto adicional:\n${contexto}` : ''}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1800,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userText }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content.map(b => b.text || '').join('\n');
+    renderResults('resultsPrep', parseResponse(text));
+  } catch (err) {
+    results.innerHTML = `<div class="result-section" style="border-color:var(--danger)"><div class="result-section-content">Error: ${err.message}</div></div>`;
+    results.classList.add('visible');
+  } finally {
+    loading.classList.remove('visible');
+  }
+}
+
+// Historial
+function renderHistorial() {
+  const container = document.getElementById('historialContent');
+  if (historial.length === 0) {
+    container.innerHTML = `<div class="history-empty"><div class="icon">🗂️</div><p>Aún no hay análisis guardados.<br>Corre tu primer diagnóstico.</p></div>`;
+    return;
+  }
+  container.innerHTML = historial.map((h, i) => `
+    <div class="history-item" onclick="loadHistory(${i})">
+      <div class="hi-top">
+        <span class="hi-canal">${h.canal} · ${h.enfoque}</span>
+        <span class="hi-date">${h.date}</span>
+      </div>
+      <div class="hi-preview">${h.obs || '(Análisis de fotos)'}</div>
+    </div>
+  `).join('');
+}
+
+function loadHistory(i) {
+  const h = historial[i];
+  switchTab('diagnostico');
+  renderResults('resultsDiag', h.sections);
+}
+
+// Init loading div texts
+document.getElementById('loadingDiag').innerHTML = '<div class="spinner"></div><p>Analizando hallazgos de campo...</p>';
+</script>
+</body>
+</html>
